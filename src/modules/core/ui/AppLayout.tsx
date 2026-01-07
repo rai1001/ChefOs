@@ -26,6 +26,9 @@ export function AppLayout({ children }: Props) {
             <NavLink to="/events" className={navClass}>
               Eventos
             </NavLink>
+            <NavLink to="/menus" className={navClass}>
+              Menus
+            </NavLink>
             <NavLink to="/purchasing/orders" className={navClass}>
               Pedidos
             </NavLink>

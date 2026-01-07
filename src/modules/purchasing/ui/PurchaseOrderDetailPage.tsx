@@ -13,7 +13,7 @@ import {
   useSuppliersLite,
   useUpdatePurchaseOrderStatus,
 } from '../data/orders'
-import type { PurchaseUnit, RoundingRule } from '../domain/purchaseOrder'
+import type { PurchaseUnit, RoundingRule } from '../domain/types'
 
 const lineSchema = z
   .object({

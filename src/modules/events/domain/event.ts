@@ -19,6 +19,7 @@ export type SpaceBooking = {
   endsAt: string
   groupLabel?: string | null
   note?: string | null
+  createdAt?: string
 }
 
 export type ServiceType =

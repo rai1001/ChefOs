@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useSupabaseSession } from '@/modules/auth/data/session'
 import { detectOverlaps } from '../domain/event'
+import { computeMenuNeeds } from '../domain/menu'
 import {
   useCreateBooking,
   useCreateEventService,
@@ -14,6 +15,7 @@ import {
   useEventServices,
   useSpaces,
 } from '../data/events'
+import { useApplyTemplateToService, useMenuTemplates, useServiceMenu, type MenuTemplate } from '../data/menus'
 
 const bookingSchema = z
   .object({
@@ -40,12 +42,7 @@ const serviceSchema = z
     format: z.enum(['sentado', 'de_pie']),
     startsAt: z.string().min(1, 'Inicio obligatorio'),
     endsAt: z.string().optional(),
-    pax: z
-      .number({
-        required_error: 'Pax obligatorios',
-        invalid_type_error: 'Pax debe ser numero',
-      })
-      .nonnegative('Pax >= 0'),
+    pax: z.number().nonnegative('Pax >= 0'),
     notes: z.string().optional(),
   })
   .refine(
@@ -80,6 +77,7 @@ export function EventDetailPage() {
   const createBooking = useCreateBooking(id, eventQuery.data?.event.orgId)
   const deleteBooking = useDeleteBooking(id)
   const services = useEventServices(id)
+  const menuTemplates = useMenuTemplates()
   const createService = useCreateEventService(id, eventQuery.data?.event.orgId)
   const deleteService = useDeleteEventService(id)
 
@@ -101,7 +99,6 @@ export function EventDetailPage() {
     register: registerService,
     handleSubmit: handleSubmitService,
     reset: resetService,
-    watch: watchService,
     formState: { errors: serviceErrors, isSubmitting: serviceSubmitting },
   } = useForm<ServiceForm>({
     resolver: zodResolver(serviceSchema),
@@ -320,21 +317,30 @@ export function EventDetailPage() {
             eventServices.map((s) => (
               <div
                 key={s.id}
-                className="flex flex-col gap-1 px-4 py-3 md:flex-row md:items-center md:justify-between"
+                className="flex flex-col gap-2 px-4 py-3"
               >
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {s.serviceType} · {formatDate(s.startsAt)} {s.endsAt ? `→ ${formatDate(s.endsAt)}` : ''} · {s.format} ·{' '}
-                    {s.pax} pax
-                  </p>
-                  <p className="text-xs text-slate-600">{s.notes ?? ''}</p>
+                <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {s.serviceType} · {formatDate(s.startsAt)} {s.endsAt ? `→ ${formatDate(s.endsAt)}` : ''} · {s.format} ·{' '}
+                      {s.pax} pax
+                    </p>
+                    <p className="text-xs text-slate-600">{s.notes ?? ''}</p>
+                  </div>
+                  <button
+                    className="text-xs font-semibold text-red-600 hover:text-red-700"
+                    onClick={() => deleteService.mutate(s.id)}
+                  >
+                    Borrar
+                  </button>
                 </div>
-                <button
-                  className="text-xs font-semibold text-red-600 hover:text-red-700"
-                  onClick={() => deleteService.mutate(s.id)}
-                >
-                  Borrar
-                </button>
+                <ServiceMenuCard
+                  serviceId={s.id}
+                  orgId={s.orgId}
+                  format={s.format}
+                  pax={s.pax}
+                  templates={menuTemplates.data ?? []}
+                />
               </div>
             ))
           ) : (
@@ -435,6 +441,92 @@ export function EventDetailPage() {
           </div>
         </form>
       </section>
+    </div>
+  )
+}
+
+function ServiceMenuCard({
+  serviceId,
+  orgId,
+  format,
+  pax,
+  templates,
+}: {
+  serviceId: string
+  orgId: string
+  format: 'sentado' | 'de_pie'
+  pax: number
+  templates: MenuTemplate[]
+}) {
+  const serviceMenu = useServiceMenu(serviceId)
+  const applyTemplate = useApplyTemplateToService(serviceId)
+  const templateItems = serviceMenu.data?.items ?? []
+
+  const needs = useMemo(
+    () => computeMenuNeeds(pax, format, templateItems).filter((n) => n.qtyRounded > 0),
+    [pax, format, templateItems],
+  )
+
+  return (
+    <div className="rounded border border-slate-200 bg-slate-50 p-3">
+      {serviceMenu.data?.template ? (
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-semibold text-slate-800">
+            Menú aplicado: {serviceMenu.data.template.name}
+          </p>
+          <select
+            aria-label="Plantilla"
+            className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+            onChange={(e) => {
+              if (e.target.value) applyTemplate.mutate({ templateId: e.target.value, orgId })
+            }}
+            defaultValue={serviceMenu.data.template.id}
+          >
+            <option value="">Cambiar plantilla</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div className="mb-2 flex items-center gap-2">
+          <p className="text-sm text-slate-700">Sin menú. Aplica plantilla:</p>
+          <select
+            aria-label="Plantilla"
+            className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) applyTemplate.mutate({ templateId: e.target.value, orgId })
+            }}
+          >
+            <option value="">Selecciona</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+        {needs.length ? (
+          needs.map((n, idx) => (
+            <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
+              <div>
+                <p className="font-semibold text-slate-900">{n.name}</p>
+                <p className="text-xs text-slate-500">
+                  Unidad {n.unit} · Cantidad: {n.qtyRounded.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="px-3 py-2 text-sm text-slate-600">Sin necesidades calculadas.</p>
+        )}
+      </div>
     </div>
   )
 }

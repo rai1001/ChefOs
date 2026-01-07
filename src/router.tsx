@@ -10,6 +10,8 @@ import { StockPage } from './modules/purchasing/ui/StockPage'
 import { EventsBoardPage } from './modules/events/ui/EventsBoardPage'
 import { NewEventPage } from './modules/events/ui/NewEventPage'
 import { EventDetailPage } from './modules/events/ui/EventDetailPage'
+import { MenuTemplatesPage } from './modules/events/ui/MenuTemplatesPage'
+import { MenuTemplateDetailPage } from './modules/events/ui/MenuTemplateDetailPage'
 
 export const appRouter = createBrowserRouter([
   {
@@ -31,6 +33,14 @@ export const appRouter = createBrowserRouter([
       {
         path: 'events/:id',
         element: <EventDetailPage />,
+      },
+      {
+        path: 'menus',
+        element: <MenuTemplatesPage />,
+      },
+      {
+        path: 'menus/:id',
+        element: <MenuTemplateDetailPage />,
       },
       {
         path: 'purchasing/suppliers',

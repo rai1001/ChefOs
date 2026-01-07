@@ -122,3 +122,35 @@ set service_type = excluded.service_type,
     ends_at = excluded.ends_at,
     pax = excluded.pax,
     notes = excluded.notes;
+
+-- E3: plantillas de menú
+insert into public.menu_templates (id, org_id, name, category, active, notes)
+values
+  ('74000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'Coffee break estandar', 'coffee_break', true, 'Plantilla demo')
+on conflict (id) do update
+set name = excluded.name,
+    category = excluded.category,
+    active = excluded.active,
+    notes = excluded.notes;
+
+insert into public.menu_template_items (id, org_id, template_id, section, name, unit, qty_per_pax_seated, qty_per_pax_standing, rounding_rule, pack_size, notes)
+values
+  ('75000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000001', 'Solidos', 'Mini bocadillo', 'ud', 1, 2, 'ceil_unit', null, null),
+  ('75000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000001', 'Bebidas', 'Cafe', 'ud', 1, 1, 'none', null, null),
+  ('75000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000001', 'Bebidas', 'Zumo', 'ud', 0, 1, 'ceil_unit', null, null)
+on conflict (id) do update
+set section = excluded.section,
+    name = excluded.name,
+    unit = excluded.unit,
+    qty_per_pax_seated = excluded.qty_per_pax_seated,
+    qty_per_pax_standing = excluded.qty_per_pax_standing,
+    rounding_rule = excluded.rounding_rule,
+    pack_size = excluded.pack_size,
+    notes = excluded.notes;
+
+insert into public.event_service_menus (id, org_id, event_service_id, template_id)
+values
+  ('76000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '73000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000001')
+on conflict (id) do update
+set event_service_id = excluded.event_service_id,
+    template_id = excluded.template_id;

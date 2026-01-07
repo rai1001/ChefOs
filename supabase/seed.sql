@@ -44,3 +44,36 @@ set name = excluded.name,
     rounding_rule = excluded.rounding_rule,
     price_per_unit = excluded.price_per_unit,
     notes = excluded.notes;
+
+insert into public.ingredients (id, org_id, hotel_id, name, base_unit, stock, par_level)
+values
+  ('60000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Tomate', 'kg', 0, null),
+  ('60000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Huevos', 'ud', 0, null)
+on conflict (id) do update
+set name = excluded.name,
+    base_unit = excluded.base_unit,
+    stock = excluded.stock,
+    par_level = excluded.par_level;
+
+insert into public.purchase_orders (id, org_id, hotel_id, supplier_id, status, order_number, notes, total_estimated)
+values
+  ('50000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'draft', 'PO-DEMO-001', 'Pedido demo inicial', 0)
+on conflict (id) do update
+set hotel_id = excluded.hotel_id,
+    supplier_id = excluded.supplier_id,
+    status = excluded.status,
+    order_number = excluded.order_number,
+    notes = excluded.notes;
+
+insert into public.purchase_order_lines (id, org_id, purchase_order_id, supplier_item_id, ingredient_id, requested_qty, received_qty, purchase_unit, rounding_rule, pack_size, unit_price, line_total)
+values
+  ('51000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', 10, 0, 'kg', 'ceil_pack', 5, 2.8, 28),
+  ('51000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', '60000000-0000-0000-0000-000000000002', 30, 0, 'ud', 'ceil_unit', null, 0.18, 5.4)
+on conflict (id) do update
+set requested_qty = excluded.requested_qty,
+    received_qty = excluded.received_qty,
+    purchase_unit = excluded.purchase_unit,
+    rounding_rule = excluded.rounding_rule,
+    pack_size = excluded.pack_size,
+    unit_price = excluded.unit_price,
+    line_total = excluded.line_total;

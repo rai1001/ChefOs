@@ -10,3 +10,4 @@
 8. (2026-01-07) Local Supabase: forzar HS256 para evitar bug ES256 en Windows/Docker; alcance solo local; Estado: Activa.
 9. (2026-01-07) P1 Purchasing: tablas `suppliers` y `supplier_items` aisladas por `org_id` mediante RLS con `org_memberships` + `auth.uid()`. Estado: Activa.
 10. (2026-01-07) Reglas de redondeo de cantidades: `none`, `ceil_unit`, `ceil_pack` (requiere `pack_size>0`). Estado: Activa.
+11. (2026-01-07) P2 Purchasing: pedidos por hotel (`purchase_orders` + `purchase_order_lines`), stock local en `ingredients`, RLS por org via `org_memberships`, recepción atómica con RPC `receive_purchase_order`. Estado: Activa.

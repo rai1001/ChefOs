@@ -23,8 +23,14 @@ export function AppLayout({ children }: Props) {
             <span className="text-sm text-slate-500">Purchasing P1</span>
           </div>
           <nav className="flex items-center gap-2">
-            <NavLink to="/purchasing/suppliers" className={navClass} end>
-              Compras · Proveedores
+            <NavLink to="/purchasing/orders" className={navClass}>
+              Pedidos
+            </NavLink>
+            <NavLink to="/purchasing/suppliers" className={navClass}>
+              Proveedores
+            </NavLink>
+            <NavLink to="/purchasing/stock" className={navClass}>
+              Stock
             </NavLink>
             <NavLink to="/login" className={navClass}>
               Acceder

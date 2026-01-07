@@ -3,6 +3,10 @@ import App from './App'
 import { LoginPage } from './modules/auth/ui/LoginPage'
 import { SuppliersPage } from './modules/purchasing/ui/SuppliersPage'
 import { SupplierDetailPage } from './modules/purchasing/ui/SupplierDetailPage'
+import { PurchaseOrdersPage } from './modules/purchasing/ui/PurchaseOrdersPage'
+import { NewPurchaseOrderPage } from './modules/purchasing/ui/NewPurchaseOrderPage'
+import { PurchaseOrderDetailPage } from './modules/purchasing/ui/PurchaseOrderDetailPage'
+import { StockPage } from './modules/purchasing/ui/StockPage'
 
 export const appRouter = createBrowserRouter([
   {
@@ -20,6 +24,22 @@ export const appRouter = createBrowserRouter([
       {
         path: 'purchasing/suppliers/:id',
         element: <SupplierDetailPage />,
+      },
+      {
+        path: 'purchasing/orders',
+        element: <PurchaseOrdersPage />,
+      },
+      {
+        path: 'purchasing/orders/new',
+        element: <NewPurchaseOrderPage />,
+      },
+      {
+        path: 'purchasing/orders/:id',
+        element: <PurchaseOrderDetailPage />,
+      },
+      {
+        path: 'purchasing/stock',
+        element: <StockPage />,
       },
     ],
   },

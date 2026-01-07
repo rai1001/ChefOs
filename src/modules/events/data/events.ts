@@ -1,0 +1,300 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getSupabaseClient } from '@/lib/supabaseClient'
+import type { EventStatus, Space, SpaceBooking } from '../domain/event'
+
+export type Hotel = { id: string; orgId: string; name: string }
+
+export type Event = {
+  id: string
+  orgId: string
+  hotelId: string
+  title: string
+  clientName?: string | null
+  status: EventStatus
+  startsAt?: string | null
+  endsAt?: string | null
+  notes?: string | null
+  createdAt?: string
+}
+
+export type BookingWithDetails = SpaceBooking & {
+  spaceName?: string
+  eventTitle?: string
+}
+
+function mapSpace(row: any): Space {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    hotelId: row.hotel_id,
+    name: row.name,
+    capacity: row.capacity,
+    notes: row.notes,
+    createdAt: row.created_at,
+  }
+}
+
+function mapEvent(row: any): Event {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    hotelId: row.hotel_id,
+    title: row.title,
+    clientName: row.client_name,
+    status: row.status,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    notes: row.notes,
+    createdAt: row.created_at,
+  }
+}
+
+function mapBooking(row: any): BookingWithDetails {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    eventId: row.event_id,
+    spaceId: row.space_id,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    groupLabel: row.group_label,
+    note: row.note,
+    createdAt: row.created_at,
+    spaceName: row.spaces?.name,
+    eventTitle: row.events?.title,
+  }
+}
+
+export async function listHotels(): Promise<Hotel[]> {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.from('hotels').select('id, org_id, name').order('name')
+  if (error) throw error
+  return data?.map((row) => ({ id: row.id, orgId: row.org_id, name: row.name })) ?? []
+}
+
+export async function listSpaces(hotelId?: string): Promise<Space[]> {
+  const supabase = getSupabaseClient()
+  let query = supabase.from('spaces').select('*').order('name')
+  if (hotelId) query = query.eq('hotel_id', hotelId)
+  const { data, error } = await query
+  if (error) throw error
+  return data?.map(mapSpace) ?? []
+}
+
+export async function createSpace(params: {
+  orgId: string
+  hotelId: string
+  name: string
+  capacity?: number | null
+  notes?: string | null
+}): Promise<Space> {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('spaces')
+    .insert({
+      org_id: params.orgId,
+      hotel_id: params.hotelId,
+      name: params.name,
+      capacity: params.capacity ?? null,
+      notes: params.notes ?? null,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapSpace(data)
+}
+
+export async function listEvents(filters?: {
+  hotelId?: string
+  startsAt?: string
+  endsAt?: string
+}): Promise<Event[]> {
+  const supabase = getSupabaseClient()
+  let query = supabase.from('events').select('*').order('created_at', { ascending: false })
+  if (filters?.hotelId) query = query.eq('hotel_id', filters.hotelId)
+  if (filters?.startsAt) query = query.gte('starts_at', filters.startsAt)
+  if (filters?.endsAt) query = query.lte('ends_at', filters.endsAt)
+  const { data, error } = await query
+  if (error) throw error
+  return data?.map(mapEvent) ?? []
+}
+
+export async function createEvent(params: {
+  orgId: string
+  hotelId: string
+  title: string
+  clientName?: string
+  status: EventStatus
+  startsAt?: string | null
+  endsAt?: string | null
+  notes?: string | null
+}): Promise<Event> {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('events')
+    .insert({
+      org_id: params.orgId,
+      hotel_id: params.hotelId,
+      title: params.title,
+      client_name: params.clientName ?? null,
+      status: params.status,
+      starts_at: params.startsAt ?? null,
+      ends_at: params.endsAt ?? null,
+      notes: params.notes ?? null,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapEvent(data)
+}
+
+export async function getEventWithBookings(
+  id: string,
+): Promise<{ event: Event; bookings: BookingWithDetails[] }> {
+  const supabase = getSupabaseClient()
+  const { data: event, error: eventErr } = await supabase.from('events').select('*').eq('id', id).single()
+  if (eventErr || !event) throw eventErr || new Error('Evento no encontrado')
+
+  const { data: bookings, error: bookingsErr } = await supabase
+    .from('space_bookings')
+    .select('*, spaces (name), events (title)')
+    .eq('event_id', id)
+    .order('starts_at')
+  if (bookingsErr) throw bookingsErr
+  return { event: mapEvent(event), bookings: bookings?.map(mapBooking) ?? [] }
+}
+
+export async function listBookingsByHotel(params: {
+  hotelId: string
+  startsAt?: string
+  endsAt?: string
+}): Promise<BookingWithDetails[]> {
+  const supabase = getSupabaseClient()
+  let query = supabase
+    .from('space_bookings')
+    .select('*, events!inner(id, title, hotel_id), spaces!inner(name, hotel_id)')
+    .eq('events.hotel_id', params.hotelId)
+    .order('starts_at')
+
+  if (params.startsAt) query = query.gte('starts_at', params.startsAt)
+  if (params.endsAt) query = query.lte('ends_at', params.endsAt)
+
+  const { data, error } = await query
+  if (error) throw error
+  return data?.map(mapBooking) ?? []
+}
+
+export async function createBooking(params: {
+  orgId: string
+  eventId: string
+  spaceId: string
+  startsAt: string
+  endsAt: string
+  groupLabel?: string | null
+  note?: string | null
+}): Promise<SpaceBooking> {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('space_bookings')
+    .insert({
+      org_id: params.orgId,
+      event_id: params.eventId,
+      space_id: params.spaceId,
+      starts_at: params.startsAt,
+      ends_at: params.endsAt,
+      group_label: params.groupLabel ?? null,
+      note: params.note ?? null,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return mapBooking(data)
+}
+
+export async function deleteBooking(id: string) {
+  const supabase = getSupabaseClient()
+  const { error } = await supabase.from('space_bookings').delete().eq('id', id)
+  if (error) throw error
+}
+
+// Hooks
+export function useHotels() {
+  return useQuery({ queryKey: ['events-hotels'], queryFn: listHotels })
+}
+
+export function useSpaces(hotelId?: string) {
+  return useQuery({ queryKey: ['spaces', hotelId], queryFn: () => listSpaces(hotelId), enabled: Boolean(hotelId) })
+}
+
+export function useCreateSpace() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: createSpace,
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['spaces', variables.hotelId] })
+    },
+  })
+}
+
+export function useEvents(filters?: { hotelId?: string; startsAt?: string; endsAt?: string }) {
+  return useQuery({
+    queryKey: ['events', filters],
+    queryFn: () => listEvents(filters),
+    enabled: Boolean(filters?.hotelId),
+  })
+}
+
+export function useEvent(eventId: string | undefined) {
+  return useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => getEventWithBookings(eventId ?? ''),
+    enabled: Boolean(eventId),
+  })
+}
+
+export function useCreateEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: createEvent,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['events', { hotelId: data.hotelId }] })
+    },
+  })
+}
+
+export function useBookingsByHotel(params: { hotelId: string; startsAt?: string; endsAt?: string }) {
+  return useQuery({
+    queryKey: ['space_bookings', params],
+    queryFn: () => listBookingsByHotel(params),
+    enabled: Boolean(params.hotelId),
+  })
+}
+
+export function useCreateBooking(eventId: string | undefined, orgId: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Omit<Parameters<typeof createBooking>[0], 'eventId' | 'orgId'>) =>
+      createBooking({
+        ...payload,
+        eventId: eventId ?? '',
+        orgId: orgId ?? '',
+      }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['event', eventId] })
+      qc.invalidateQueries({ queryKey: ['space_bookings'] })
+      qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['spaces', vars.spaceId] })
+    },
+  })
+}
+
+export function useDeleteBooking(eventId: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: deleteBooking,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['event', eventId] })
+      qc.invalidateQueries({ queryKey: ['space_bookings'] })
+    },
+  })
+}

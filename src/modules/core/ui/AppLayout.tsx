@@ -20,9 +20,12 @@ export function AppLayout({ children }: Props) {
             <div className="rounded bg-brand-600 px-2 py-1 text-sm font-semibold text-white">
               ChefOS
             </div>
-            <span className="text-sm text-slate-500">Purchasing P1</span>
+            <span className="text-sm text-slate-500">Compras + Eventos</span>
           </div>
           <nav className="flex items-center gap-2">
+            <NavLink to="/events" className={navClass}>
+              Eventos
+            </NavLink>
             <NavLink to="/purchasing/orders" className={navClass}>
               Pedidos
             </NavLink>

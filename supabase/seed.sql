@@ -77,3 +77,36 @@ set requested_qty = excluded.requested_qty,
     pack_size = excluded.pack_size,
     unit_price = excluded.unit_price,
     line_total = excluded.line_total;
+
+-- E1 demo spaces/events/bookings
+insert into public.spaces (id, org_id, hotel_id, name, capacity, notes)
+values
+  ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Sala A', 80, null),
+  ('70000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Sala B', 60, null),
+  ('70000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Sala C', 40, null)
+on conflict (id) do update
+set name = excluded.name,
+    capacity = excluded.capacity,
+    notes = excluded.notes;
+
+insert into public.events (id, org_id, hotel_id, title, client_name, status, starts_at, ends_at, notes)
+values
+  ('71000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Evento Demo', 'Cliente Demo', 'confirmed', '2026-01-10T09:00:00Z', '2026-01-10T18:00:00Z', 'Evento semilla')
+on conflict (id) do update
+set title = excluded.title,
+    client_name = excluded.client_name,
+    status = excluded.status,
+    starts_at = excluded.starts_at,
+    ends_at = excluded.ends_at,
+    notes = excluded.notes;
+
+insert into public.space_bookings (id, org_id, event_id, space_id, starts_at, ends_at, group_label, note)
+values
+  ('72000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '71000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '2026-01-10T09:00:00Z', '2026-01-10T11:00:00Z', 'A+B', 'Montaje maniana'),
+  ('72000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '71000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000002', '2026-01-10T09:00:00Z', '2026-01-10T11:00:00Z', 'A+B', 'Montaje maniana'),
+  ('72000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '71000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '2026-01-10T10:30:00Z', '2026-01-10T12:00:00Z', null, 'Reserva solapada demo')
+on conflict (id) do update
+set starts_at = excluded.starts_at,
+    ends_at = excluded.ends_at,
+    group_label = excluded.group_label,
+    note = excluded.note;

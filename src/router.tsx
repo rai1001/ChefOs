@@ -7,6 +7,9 @@ import { PurchaseOrdersPage } from './modules/purchasing/ui/PurchaseOrdersPage'
 import { NewPurchaseOrderPage } from './modules/purchasing/ui/NewPurchaseOrderPage'
 import { PurchaseOrderDetailPage } from './modules/purchasing/ui/PurchaseOrderDetailPage'
 import { StockPage } from './modules/purchasing/ui/StockPage'
+import { EventsBoardPage } from './modules/events/ui/EventsBoardPage'
+import { NewEventPage } from './modules/events/ui/NewEventPage'
+import { EventDetailPage } from './modules/events/ui/EventDetailPage'
 
 export const appRouter = createBrowserRouter([
   {
@@ -15,7 +18,19 @@ export const appRouter = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/purchasing/suppliers" replace />,
+        element: <Navigate to="/events" replace />,
+      },
+      {
+        path: 'events',
+        element: <EventsBoardPage />,
+      },
+      {
+        path: 'events/new',
+        element: <NewEventPage />,
+      },
+      {
+        path: 'events/:id',
+        element: <EventDetailPage />,
       },
       {
         path: 'purchasing/suppliers',

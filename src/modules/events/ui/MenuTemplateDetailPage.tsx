@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useSupabaseSession } from '@/modules/auth/data/session'
+import { useActiveOrgId } from '@/modules/orgs/data/activeOrg'
 import { useCreateMenuTemplateItem, useMenuTemplateItems, useMenuTemplates } from '../data/menus'
 
 const schema = z
@@ -31,10 +32,11 @@ type Form = z.infer<typeof schema>
 export function MenuTemplateDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { session, loading, error } = useSupabaseSession()
-  const templates = useMenuTemplates()
+  const { activeOrgId, loading: orgLoading } = useActiveOrgId()
+  const templates = useMenuTemplates(activeOrgId ?? undefined)
   const template = templates.data?.find((t) => t.id === id)
   const items = useMenuTemplateItems(id)
-  const createItem = useCreateMenuTemplateItem(id, template?.orgId)
+  const createItem = useCreateMenuTemplateItem(id, activeOrgId ?? template?.orgId ?? undefined)
 
   const {
     register,
@@ -71,7 +73,8 @@ export function MenuTemplateDetailPage() {
     })
   }
 
-  if (loading) return <p className="p-4 text-sm text-slate-600">Cargando sesion...</p>
+  if (loading || orgLoading || templates.isLoading)
+    return <p className="p-4 text-sm text-slate-600">Cargando organizacion...</p>
   if (!session || error)
     return (
       <div className="rounded border border-slate-200 bg-white p-4">
@@ -101,11 +104,11 @@ export function MenuTemplateDetailPage() {
             items.data.map((it) => (
               <div key={it.id} className="px-4 py-3 text-sm text-slate-800">
                 <p className="font-semibold">
-                  {it.section ? `${it.section} · ` : ''}
+                  {it.section ? `${it.section} - ` : ''}
                   {it.name}
                 </p>
                 <p className="text-xs text-slate-600">
-                  {it.unit} · seated {it.qtyPerPaxSeated} · de_pie {it.qtyPerPaxStanding} ·{' '}
+                  {it.unit} - seated {it.qtyPerPaxSeated} - de_pie {it.qtyPerPaxStanding} -{' '}
                   {it.roundingRule} {it.packSize ? `(pack ${it.packSize})` : ''}
                 </p>
               </div>

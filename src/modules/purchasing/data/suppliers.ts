@@ -186,3 +186,21 @@ export function useCreateSupplierItem(supplierId: string | undefined) {
     },
   })
 }
+export async function listSupplierItemsByOrg(orgId: string): Promise<SupplierItem[]> {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.from('supplier_items').select('*, suppliers(org_id)').order('created_at')
+  if (error) throw error
+  return (
+    data
+      ?.filter((row: any) => row.suppliers?.org_id === orgId)
+      .map(mapSupplierItem) ?? []
+  )
+}
+
+export function useSupplierItemsByOrg(orgId: string | undefined) {
+  return useQuery({
+    queryKey: ['supplier_items_by_org', orgId],
+    queryFn: () => listSupplierItemsByOrg(orgId ?? ''),
+    enabled: Boolean(orgId),
+  })
+}

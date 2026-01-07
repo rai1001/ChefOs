@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { useSupabaseSession } from '@/modules/auth/data/session'
+import { useActiveOrgId } from '@/modules/orgs/data/activeOrg'
 import { useCreateMenuTemplate, useMenuTemplates } from '../data/menus'
-import { useHotels } from '../data/events'
 
 const schema = z.object({
   name: z.string().min(1, 'Nombre obligatorio'),
@@ -15,10 +15,9 @@ type Form = z.infer<typeof schema>
 
 export function MenuTemplatesPage() {
   const { session, loading, error } = useSupabaseSession()
-  const templates = useMenuTemplates()
+  const { activeOrgId, loading: orgLoading } = useActiveOrgId()
+  const templates = useMenuTemplates(activeOrgId ?? undefined)
   const create = useCreateMenuTemplate()
-  const hotels = useHotels()
-  const orgId = hotels.data?.[0]?.orgId ?? templates.data?.[0]?.orgId ?? ''
 
   const {
     register,
@@ -27,12 +26,11 @@ export function MenuTemplatesPage() {
   } = useForm<Form>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (values: Form) => {
-    if (!orgId) return
-    await create.mutateAsync({ ...values, orgId })
+    if (!activeOrgId) return
+    await create.mutateAsync({ ...values, orgId: activeOrgId })
   }
 
-  if (loading) return <p className="p-4 text-sm text-slate-600">Cargando sesion...</p>
-  if (hotels.isLoading) return <p className="p-4 text-sm text-slate-600">Cargando hoteles...</p>
+  if (loading || orgLoading) return <p className="p-4 text-sm text-slate-600">Cargando organizacion...</p>
   if (!session || error)
     return (
       <div className="rounded border border-slate-200 bg-white p-4">
@@ -85,7 +83,7 @@ export function MenuTemplatesPage() {
           <div className="md:col-span-3">
             <button
               type="submit"
-              disabled={isSubmitting || !orgId}
+              disabled={isSubmitting || !activeOrgId}
               className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {isSubmitting ? 'Creando...' : 'Crear'}
@@ -106,12 +104,12 @@ export function MenuTemplatesPage() {
             to={`/menus/${tmpl.id}`}
             className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:border-brand-200"
           >
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{tmpl.name}</p>
-              <p className="text-xs text-slate-600">
-                Categoria: {tmpl.category} {tmpl.notes ? `· ${tmpl.notes}` : ''}
-              </p>
-            </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{tmpl.name}</p>
+                <p className="text-xs text-slate-600">
+                Categoria: {tmpl.category} {tmpl.notes ? `- ${tmpl.notes}` : ''}
+                </p>
+              </div>
             <span className="text-xs font-semibold text-brand-600">Ver</span>
           </Link>
         ))}

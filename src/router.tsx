@@ -7,11 +7,20 @@ import { PurchaseOrdersPage } from './modules/purchasing/ui/PurchaseOrdersPage'
 import { NewPurchaseOrderPage } from './modules/purchasing/ui/NewPurchaseOrderPage'
 import { PurchaseOrderDetailPage } from './modules/purchasing/ui/PurchaseOrderDetailPage'
 import { StockPage } from './modules/purchasing/ui/StockPage'
+import { DashboardPage } from './modules/dashboard/ui/DashboardPage'
+import { EventOrdersPage } from './modules/purchasing/ui/EventOrdersPage'
+import { EventOrderDetailPage } from './modules/purchasing/ui/EventOrderDetailPage'
 import { EventsBoardPage } from './modules/events/ui/EventsBoardPage'
 import { NewEventPage } from './modules/events/ui/NewEventPage'
 import { EventDetailPage } from './modules/events/ui/EventDetailPage'
 import { MenuTemplatesPage } from './modules/events/ui/MenuTemplatesPage'
 import { MenuTemplateDetailPage } from './modules/events/ui/MenuTemplateDetailPage'
+import { ProductsPage } from './modules/recipes/ui/ProductsPage'
+import { RecipesPage } from './modules/recipes/ui/RecipesPage'
+import { RecipeDetailPage } from './modules/recipes/ui/RecipeDetailPage'
+import { SchedulingPage } from './modules/scheduling/ui/SchedulingPage'
+import { RosterGeneratorPage } from './modules/scheduling/ui/RosterGeneratorPage'
+import { StaffPage } from './modules/staff/ui/StaffPage'
 
 export const appRouter = createBrowserRouter([
   {
@@ -20,7 +29,11 @@ export const appRouter = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/events" replace />,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
       },
       {
         path: 'events',
@@ -43,6 +56,30 @@ export const appRouter = createBrowserRouter([
         element: <MenuTemplateDetailPage />,
       },
       {
+        path: 'products',
+        element: <ProductsPage />,
+      },
+      {
+        path: 'recipes',
+        element: <RecipesPage />,
+      },
+      {
+        path: 'recipes/:id',
+        element: <RecipeDetailPage />,
+      },
+      {
+        path: 'staff',
+        element: <StaffPage />,
+      },
+      {
+        path: 'scheduling',
+        element: <SchedulingPage />,
+      },
+      {
+        path: 'scheduling/generate',
+        element: <RosterGeneratorPage />,
+      },
+      {
         path: 'purchasing/suppliers',
         element: <SuppliersPage />,
       },
@@ -61,6 +98,14 @@ export const appRouter = createBrowserRouter([
       {
         path: 'purchasing/orders/:id',
         element: <PurchaseOrderDetailPage />,
+      },
+      {
+        path: 'purchasing/event-orders',
+        element: <EventOrdersPage />,
+      },
+      {
+        path: 'purchasing/event-orders/:id',
+        element: <EventOrderDetailPage />,
       },
       {
         path: 'purchasing/stock',

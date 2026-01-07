@@ -23,11 +23,32 @@ export function AppLayout({ children }: Props) {
             <span className="text-sm text-slate-500">Compras + Eventos</span>
           </div>
           <nav className="flex items-center gap-2">
+            <NavLink to="/dashboard" className={navClass}>
+              Dashboard
+            </NavLink>
             <NavLink to="/events" className={navClass}>
               Eventos
             </NavLink>
             <NavLink to="/menus" className={navClass}>
               Menus
+            </NavLink>
+            <NavLink to="/products" className={navClass}>
+              Productos
+            </NavLink>
+            <NavLink to="/recipes" className={navClass}>
+              Recetas
+            </NavLink>
+            <NavLink to="/scheduling" className={navClass}>
+              Horarios
+            </NavLink>
+            <NavLink to="/scheduling/generate" className={navClass}>
+              Generar roster
+            </NavLink>
+            <NavLink to="/staff" className={navClass}>
+              Personal
+            </NavLink>
+            <NavLink to="/purchasing/event-orders" className={navClass}>
+              Pedidos evento
             </NavLink>
             <NavLink to="/purchasing/orders" className={navClass}>
               Pedidos

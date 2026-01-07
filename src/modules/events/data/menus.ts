@@ -40,9 +40,10 @@ function mapItem(row: any): MenuTemplateItem {
   }
 }
 
-export async function listMenuTemplates(): Promise<MenuTemplate[]> {
+export async function listMenuTemplates(orgId?: string): Promise<MenuTemplate[]> {
   const supabase = getSupabaseClient()
-  const { data, error } = await supabase.from('menu_templates').select('*').order('created_at', { ascending: false })
+  const query = supabase.from('menu_templates').select('*').order('created_at', { ascending: false })
+  const { data, error } = orgId ? await query.eq('org_id', orgId) : await query
   if (error) throw error
   return data?.map(mapTemplate) ?? []
 }
@@ -84,6 +85,9 @@ export async function createMenuTemplateItem(
   orgId: string,
   payload: Omit<MenuTemplateItem, 'id'>,
 ) {
+  if (!templateId || !orgId) {
+    throw new Error('Faltan orgId o templateId para crear item')
+  }
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('menu_template_items')
@@ -141,15 +145,21 @@ export async function getServiceMenu(eventServiceId: string): Promise<ServiceMen
 }
 
 // Hooks
-export function useMenuTemplates() {
-  return useQuery({ queryKey: ['menu_templates'], queryFn: listMenuTemplates })
+export function useMenuTemplates(orgId?: string) {
+  return useQuery({
+    queryKey: ['menu_templates', orgId],
+    queryFn: () => listMenuTemplates(orgId),
+    enabled: orgId !== undefined,
+  })
 }
 
 export function useCreateMenuTemplate() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: createMenuTemplate,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['menu_templates'] }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['menu_templates', variables.orgId] })
+    },
   })
 }
 
@@ -165,10 +175,10 @@ export function useCreateMenuTemplateItem(templateId: string | undefined, orgId:
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: Omit<MenuTemplateItem, 'id'>) =>
-      createMenuTemplateItem(templateId ?? '', orgId ?? '', { ...payload, id: '' } as any),
+      createMenuTemplateItem(templateId ?? '', orgId ?? '', payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['menu_template_items', templateId] })
-      qc.invalidateQueries({ queryKey: ['menu_templates'] })
+      qc.invalidateQueries({ queryKey: ['menu_templates', orgId] })
     },
   })
 }

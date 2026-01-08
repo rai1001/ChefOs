@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabaseClient'
+import { getEnv } from '@/config/env'
 import { parseOcrText, type OcrDraft } from '../domain/ocrParser'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const { supabaseUrl } = getEnv()
 
 export type OcrJob = {
   id: string
@@ -113,7 +114,6 @@ export function useUploadEventAttachment(eventId: string | undefined, orgId: str
 }
 
 export async function enqueueOcr(attachmentId: string) {
-  if (!supabaseUrl) throw new Error('Falta VITE_SUPABASE_URL')
   const supabase = getSupabaseClient()
   const {
     data: { session },
@@ -131,7 +131,6 @@ export async function enqueueOcr(attachmentId: string) {
 }
 
 export async function runOcr(jobId: string) {
-  if (!supabaseUrl) throw new Error('Falta VITE_SUPABASE_URL')
   const supabase = getSupabaseClient()
   const {
     data: { session },

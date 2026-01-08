@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { getSupabaseClient, supabaseClient } from '@/lib/supabaseClient'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 
 type SessionState = {
   session: Session | null
@@ -12,15 +12,6 @@ export function useSupabaseSession(): SessionState {
   const [state, setState] = useState<SessionState>({ session: null, loading: true })
 
   useEffect(() => {
-    if (!supabaseClient) {
-      setState({
-        session: null,
-        loading: false,
-        error: new Error('Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.'),
-      })
-      return
-    }
-
     const client = getSupabaseClient()
 
     const maybeSetE2ESession = async () => {
